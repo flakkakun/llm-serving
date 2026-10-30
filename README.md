@@ -46,7 +46,7 @@ Dashboard: put your Modal host in `monitoring/prometheus.yml`, then run `docker 
 
 ## Results
 
-**Setup:** Qwen2.5-7B-Instruct (fp16, about 15 GB), vLLM 0.10.2, one NVIDIA A10 (24 GB) on Modal. Each request generates 256 tokens. The client is a laptop calling Modal's us-east region over the internet, so TTFT includes that round trip and Modal's proxy. Raw data: [`results/20261030-034259.json`](results/20261030-034259.json).
+**Setup:** Qwen2.5-7B-Instruct (fp16, about 15 GB), vLLM 0.10.2, one NVIDIA A10 (24 GB) on Modal. Each request generates 256 tokens. The client is a laptop calling Modal's us-east region over the internet, so TTFT includes that round trip and Modal's proxy. Raw data: [`results/20261030-034259.json`](results/20261030-034259.json) (1 to 32 users) and [`results/20261030-150146.json`](results/20261030-150146.json) (64 and 128 users).
 
 | Concurrent users | TTFT p50 | TTFT p99 | Time per token p50 | Speed per user | Total throughput |
 |---:|---:|---:|---:|---:|---:|
@@ -54,19 +54,23 @@ Dashboard: put your Modal host in `monitoring/prometheus.yml`, then run `docker 
 | 4 | 466 ms | 1,746 ms | 34.8 ms | 28.8 tok/s | 106 tok/s |
 | 16 | 504 ms | 2,878 ms | 37.6 ms | 26.6 tok/s | 383 tok/s |
 | 32 | 542 ms | 4,711 ms | 39.2 ms | 25.5 tok/s | 710 tok/s |
+| 64 | 579 ms | 5,239 ms | 46.2 ms | 21.7 tok/s | 1,221 tok/s |
+| 128 | 984 ms | 22,595 ms | 63.4 ms | 15.8 tok/s | 1,275 tok/s |
 
 **What it shows:**
 - **Batching is almost free here.** Going from 1 to 32 users raised total throughput **25x** (28 → 710 tok/s), while each user got only **14% slower** (29.8 → 25.5 tok/s). That's continuous batching and PagedAttention at work.
 - **Decode is memory-bound, as predicted.** The A10 reads memory at about 600 GB/s, so streaming 15 GB of weights sets a floor of about 25 ms per token. We measured 33.6 ms for one user, roughly 75% of the hardware limit.
-- **The cost of tail latency.** Median TTFT barely moves, but p99 climbs from 0.8 s to 4.7 s. When 32 requests land at once, some have to wait while other prompts are prefilled. With 32 users we haven't hit the knee of the curve yet, so the next run should push to 64 and 128.
-- **Cost:** at about $1.10/hr for an A10 and 710 tok/s, that's about **$0.43 per million output tokens** at 32 users.
+- **The knee is between 64 and 128 users.** Going from 32 to 64 users still adds 72% more throughput (710 → 1,221 tok/s). Doubling again to 128 adds only 4% (1,275 tok/s), but each user drops to 15.8 tok/s and the time per token p99 jumps to 107 ms. Past 64 users, extra traffic mostly turns into waiting rather than extra output.
+- **The cost of tail latency.** Median TTFT stays under 0.6 s up to 64 users, but p99 climbs from 0.8 s (1 user) to 5.2 s (64) and then 22.6 s (128). Some requests wait a long time while other prompts are prefilled. For a chat app with a 5-second p99 TTFT target, this setup tops out at about 64 concurrent users per A10.
+- **Not yet measured:** why throughput flattens out. The likely causes are the GPU moving from memory-bound to compute-bound as the batch grows, or vLLM's scheduler limits. The Grafana dashboard wasn't running for this run, so the next run should capture running/waiting requests and KV-cache use to tell them apart.
+- **Cost:** at about $1.10/hr for an A10, that's about **$0.43 per million output tokens** at 32 users (710 tok/s) and **$0.25** at 64 users (1,221 tok/s). Going to 128 users barely lowers the cost further ($0.24), but latency gets much worse.
 
 **Measurement note:** Modal's proxy sometimes delivers streamed tokens in bursts, so the gaps between individual tokens seen on the client are noisy. The table therefore reports time per output token, which is decode time averaged over each response. vLLM's own `vllm:inter_token_latency_seconds` metric gives the server-side view in Grafana.
 
 ## Experiments planned
 
 - [x] Baseline: fp16 on an A10, concurrency 1 → 32
-- [ ] Push concurrency to 64 / 128 to find the knee
+- [x] Push concurrency to 64 / 128 to find the knee (between 64 and 128 users)
 - [ ] Same run on an L4 (cheaper, half the memory bandwidth)
 - [ ] Quantised model (AWQ): speed vs. memory
 - [ ] Bigger GPU (A100/H100) for one comparison run
