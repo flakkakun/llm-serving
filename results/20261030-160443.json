@@ -1,0 +1,55 @@
+{
+  "label": "A10 qwen2.5-7b-instruct fp16, vLLM 0.10.2 (with Prometheus)",
+  "url": "https://flakkakun--llm-serving-serve.us-east.modal.run",
+  "max_tokens": 256,
+  "levels": [
+    {
+      "concurrency": 64,
+      "requests": 256,
+      "errors": 0,
+      "wall_s": 61.2,
+      "ttft_ms": {
+        "p50": 604.8,
+        "p90": 4157.4,
+        "p99": 6315.1
+      },
+      "itl_ms": {
+        "p50": 0.0,
+        "p90": 142.8,
+        "p99": 691.3
+      },
+      "tpot_ms": {
+        "p50": 46.7,
+        "p90": 53.7,
+        "p99": 70.1
+      },
+      "per_user_tok_per_s": 21.4,
+      "output_tok_per_s": 1070.9,
+      "req_per_s": 4.18
+    },
+    {
+      "concurrency": 128,
+      "requests": 512,
+      "errors": 0,
+      "wall_s": 111.74,
+      "ttft_ms": {
+        "p50": 967.0,
+        "p90": 7537.2,
+        "p99": 39865.4
+      },
+      "itl_ms": {
+        "p50": 0.0,
+        "p90": 162.6,
+        "p99": 1095.1
+      },
+      "tpot_ms": {
+        "p50": 62.7,
+        "p90": 90.6,
+        "p99": 159.4
+      },
+      "per_user_tok_per_s": 16.0,
+      "output_tok_per_s": 1173.0,
+      "req_per_s": 4.58
+    }
+  ]
+}
