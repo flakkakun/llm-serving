@@ -40,7 +40,7 @@ modal deploy serve.py            # prints your URL; put it in .env as VLLM_URL
 python bench.py --label "L4 qwen2.5-7b fp16"
 ```
 
-Dashboard: put your Modal host in `monitoring/prometheus.yml`, then run `docker compose -f monitoring/docker-compose.yml up -d` and open http://localhost:3000.
+Dashboard: put your Modal host in `monitoring/prometheus.yml`, then run `docker compose -f monitoring/docker-compose.yml up -d` and open http://localhost:3000 (if port 3000 is taken, prefix the command with `GRAFANA_PORT=3001`).
 
 **Keeping costs down:** Prometheus scrapes every 5 seconds, and each scrape keeps the GPU awake. Run `docker compose -f monitoring/docker-compose.yml down` when you finish a benchmark, and use `modal app stop llm-serving` to shut everything down.
 
@@ -62,7 +62,9 @@ Dashboard: put your Modal host in `monitoring/prometheus.yml`, then run `docker 
 - **Decode is memory-bound, as predicted.** The A10 reads memory at about 600 GB/s, so streaming 15 GB of weights sets a floor of about 25 ms per token. We measured 33.6 ms for one user, roughly 75% of the hardware limit.
 - **The knee is between 64 and 128 users.** Going from 32 to 64 users still adds 72% more throughput (710 → 1,221 tok/s). Doubling again to 128 adds only 4% (1,275 tok/s), but each user drops to 15.8 tok/s and the time per token p99 jumps to 107 ms. Past 64 users, extra traffic mostly turns into waiting rather than extra output.
 - **The cost of tail latency.** Median TTFT stays under 0.6 s up to 64 users, but p99 climbs from 0.8 s (1 user) to 5.2 s (64) and then 22.6 s (128). Some requests wait a long time while other prompts are prefilled. For a chat app with a 5-second p99 TTFT target, this setup tops out at about 64 concurrent users per A10.
-- **Not yet measured:** why throughput flattens out. The likely causes are the GPU moving from memory-bound to compute-bound as the batch grows, or vLLM's scheduler limits. The Grafana dashboard wasn't running for this run, so the next run should capture running/waiting requests and KV-cache use to tell them apart.
+- **What the server says about 64 users.** A rerun with Prometheus recording ([`results/20261030-160443.json`](results/20261030-160443.json)) shows vLLM running up to 63 requests at once with **0 waiting, 0 preemptions, near-zero queue time, and the KV cache only 15% full** (of about 78,000 token slots). So at 64 users, neither memory nor vLLM's scheduler is the limit. The server generated about 1,250–1,300 tok/s, and each decode step slowed from 34 ms (1 user) to about 47 ms. That pattern fits the GPU's compute becoming the limit as the batch grows, but GPU utilisation wasn't measured directly, so it isn't proven.
+- **The dashboard went blind at 128 users.** During the 128-user phase, every Prometheus scrape timed out (5 s limit) for about 80 seconds. The `/metrics` page is served through the same busy server and Modal proxy as the traffic, so the data is missing right when it's needed most. The reason 128 users stalls is therefore still open. The fix is a longer scrape timeout, or a metrics path that doesn't go through the overloaded endpoint.
+- **Run-to-run variance is about 10%.** The rerun reached 1,071 and 1,173 tok/s at 64 and 128 users, compared with 1,221 and 1,275 in the first run. The pattern is the same, but a single run shouldn't be quoted to the last digit.
 - **Cost:** at about $1.10/hr for an A10, that's about **$0.43 per million output tokens** at 32 users (710 tok/s) and **$0.25** at 64 users (1,221 tok/s). Going to 128 users barely lowers the cost further ($0.24), but latency gets much worse.
 
 **Measurement note:** Modal's proxy sometimes delivers streamed tokens in bursts, so the gaps between individual tokens seen on the client are noisy. The table therefore reports time per output token, which is decode time averaged over each response. vLLM's own `vllm:inter_token_latency_seconds` metric gives the server-side view in Grafana.
@@ -71,6 +73,7 @@ Dashboard: put your Modal host in `monitoring/prometheus.yml`, then run `docker 
 
 - [x] Baseline: fp16 on an A10, concurrency 1 → 32
 - [x] Push concurrency to 64 / 128 to find the knee (between 64 and 128 users)
+- [ ] Rerun 128 users with a longer scrape timeout, to see why throughput stalls
 - [ ] Same run on an L4 (cheaper, half the memory bandwidth)
 - [ ] Quantised model (AWQ): speed vs. memory
 - [ ] Bigger GPU (A100/H100) for one comparison run
