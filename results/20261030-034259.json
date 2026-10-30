@@ -1,0 +1,103 @@
+{
+  "label": "A10 qwen2.5-7b-instruct fp16, vLLM 0.10.2",
+  "url": "https://flakkakun--llm-serving-serve.us-east.modal.run",
+  "max_tokens": 256,
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 8,
+      "errors": 0,
+      "wall_s": 72.71,
+      "ttft_ms": {
+        "p50": 458.7,
+        "p90": 591.7,
+        "p99": 835.3
+      },
+      "itl_ms": {
+        "p50": 0.0,
+        "p90": 102.2,
+        "p99": 198.8
+      },
+      "tpot_ms": {
+        "p50": 33.6,
+        "p90": 34.1,
+        "p99": 34.1
+      },
+      "per_user_tok_per_s": 29.8,
+      "output_tok_per_s": 28.2,
+      "req_per_s": 0.11
+    },
+    {
+      "concurrency": 4,
+      "requests": 16,
+      "errors": 0,
+      "wall_s": 38.75,
+      "ttft_ms": {
+        "p50": 466.4,
+        "p90": 1148.3,
+        "p99": 1746.3
+      },
+      "itl_ms": {
+        "p50": 0.1,
+        "p90": 103.5,
+        "p99": 171.3
+      },
+      "tpot_ms": {
+        "p50": 34.8,
+        "p90": 35.0,
+        "p99": 35.2
+      },
+      "per_user_tok_per_s": 28.8,
+      "output_tok_per_s": 105.7,
+      "req_per_s": 0.41
+    },
+    {
+      "concurrency": 16,
+      "requests": 64,
+      "errors": 0,
+      "wall_s": 42.8,
+      "ttft_ms": {
+        "p50": 503.7,
+        "p90": 2214.4,
+        "p99": 2877.5
+      },
+      "itl_ms": {
+        "p50": 0.1,
+        "p90": 104.5,
+        "p99": 177.1
+      },
+      "tpot_ms": {
+        "p50": 37.6,
+        "p90": 37.9,
+        "p99": 38.1
+      },
+      "per_user_tok_per_s": 26.6,
+      "output_tok_per_s": 382.8,
+      "req_per_s": 1.5
+    },
+    {
+      "concurrency": 32,
+      "requests": 128,
+      "errors": 0,
+      "wall_s": 46.16,
+      "ttft_ms": {
+        "p50": 541.6,
+        "p90": 3028.7,
+        "p99": 4710.9
+      },
+      "itl_ms": {
+        "p50": 0.0,
+        "p90": 108.3,
+        "p99": 194.5
+      },
+      "tpot_ms": {
+        "p50": 39.2,
+        "p90": 39.5,
+        "p99": 39.8
+      },
+      "per_user_tok_per_s": 25.5,
+      "output_tok_per_s": 709.9,
+      "req_per_s": 2.77
+    }
+  ]
+}

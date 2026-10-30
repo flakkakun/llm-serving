@@ -1,0 +1,79 @@
+{
+  "label": "A10 qwen2.5-7b-instruct fp16, vLLM 0.10.2",
+  "url": "https://flakkakun--llm-serving-serve.us-east.modal.run",
+  "max_tokens": 256,
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 8,
+      "errors": 0,
+      "wall_s": 73.23,
+      "ttft_ms": {
+        "p50": 492.6,
+        "p90": 704.7,
+        "p99": 882.6
+      },
+      "itl_ms": {
+        "p50": 0.1,
+        "p90": 106.1,
+        "p99": 294.0
+      },
+      "output_tok_per_s": 28.0,
+      "req_per_s": 0.11
+    },
+    {
+      "concurrency": 4,
+      "requests": 16,
+      "errors": 0,
+      "wall_s": 40.68,
+      "ttft_ms": {
+        "p50": 467.3,
+        "p90": 1827.8,
+        "p99": 3490.6
+      },
+      "itl_ms": {
+        "p50": 0.1,
+        "p90": 101.9,
+        "p99": 175.5
+      },
+      "output_tok_per_s": 100.7,
+      "req_per_s": 0.39
+    },
+    {
+      "concurrency": 16,
+      "requests": 64,
+      "errors": 0,
+      "wall_s": 42.54,
+      "ttft_ms": {
+        "p50": 590.8,
+        "p90": 1517.2,
+        "p99": 2335.4
+      },
+      "itl_ms": {
+        "p50": 0.0,
+        "p90": 106.3,
+        "p99": 351.2
+      },
+      "output_tok_per_s": 385.1,
+      "req_per_s": 1.5
+    },
+    {
+      "concurrency": 32,
+      "requests": 128,
+      "errors": 0,
+      "wall_s": 45.02,
+      "ttft_ms": {
+        "p50": 533.5,
+        "p90": 2170.1,
+        "p99": 3197.1
+      },
+      "itl_ms": {
+        "p50": 0.0,
+        "p90": 106.7,
+        "p99": 203.9
+      },
+      "output_tok_per_s": 727.8,
+      "req_per_s": 2.84
+    }
+  ]
+}
